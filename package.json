@@ -1,0 +1,28 @@
+{
+  "name": "tagpuan-back",
+  "version": "1.0.0",
+  "description": "backend for tagpuan app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index",
+    "start": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/herbert-cane/tagpuan-back.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/herbert-cane/tagpuan-back/issues"
+  },
+  "homepage": "https://github.com/herbert-cane/tagpuan-back#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongodb": "^6.14.2",
+    "mongoose": "^8.12.1",
+    "nodemon": "^3.1.9"
+  }
+}
