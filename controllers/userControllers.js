@@ -62,7 +62,7 @@ module.exports.loginUser = async (req, res) => {
 
 module.exports.getUserDetails = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id, {password: 0});
         if (!user) return res.status(404).json({ error: "User not found" });
         res.json(user);
     } catch (error) {
@@ -72,7 +72,7 @@ module.exports.getUserDetails = async (req, res) => {
 
 module.exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await User.find({}, {password: 0}); // Include all details except password
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
