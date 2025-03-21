@@ -79,6 +79,34 @@ module.exports.getAllUsers = async (req, res) => {
     }
 };
 
+module.exports.changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ error: "All fields are required." });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        // Compare old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: "Incorrect old password." });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+        await user.save();
+
+        res.status(200).json({ message: "Password changed successfully!" });
+    } catch (error) {
+        res.status(500).json({ error: "Server error: " + error.message });
+    }
+};
+
 module.exports.changeUserRole = async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
@@ -104,7 +132,10 @@ module.exports.verifyUser = async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
             req.params.userId,
-            { verified: true },
+            { 
+                is_verified: true,
+                "verification.status": "Approved"
+            },
             { new: true }
         );
 
@@ -121,6 +152,29 @@ module.exports.verifyUser = async (req, res) => {
     }
 };
 
-// Uploading images
+module.exports.denyVerification = async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.params.userId,
+            { 
+                is_verified: false,
+                "verification.status": "Rejected"
+            },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({
+            message: "User verification rejected",
+            user,
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
 
 
