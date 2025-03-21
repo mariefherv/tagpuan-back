@@ -72,7 +72,7 @@ module.exports.getUserDetails = async (req, res) => {
 
 module.exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({}, "_id email");
+        const users = await User.find({});
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
