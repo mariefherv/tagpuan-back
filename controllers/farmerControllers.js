@@ -19,7 +19,10 @@ module.exports.viewAllFarmers = async (req, res) => {
             filters["farmer_details.modeOfDelivery"] = req.query.modeOfDelivery;
         }
 
-        const farmers = await User.find({ role: "Farmer", ...filters });
+        const farmers = await User.find({ 
+            role: "Farmer",
+            is_verified: true,
+            ...filters });
         res.json(farmers);
     } catch (error) {
         res.status(500).json({ error: error.message });

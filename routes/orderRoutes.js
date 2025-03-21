@@ -19,4 +19,6 @@ router.post("/request/:farmer_id", verify, orderController.requestOrder);
 // View all orders (with optional query filters)
 router.get("/", verify, orderController.viewAllOrders);
 
+// View all orders of farmer
+
 module.exports = router;

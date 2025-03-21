@@ -9,7 +9,7 @@ const bufferToBase64 = (buffer) => {
 
 module.exports.registerUser = async (req, res) => {
     try {
-        const { username, email, password, role, first_name, last_name, middle_name, suffix, farmer_details } = req.body;
+        const { password } = req.body;
         const hashedPw = bcrypt.hashSync(password, 10);
 
         // Check if files are uploaded
@@ -23,15 +23,8 @@ module.exports.registerUser = async (req, res) => {
 
         // Create new user
         const user = new User({
-            username,
-            email,
+            ...req.body,
             password: hashedPw,
-            role,
-            first_name,
-            last_name,
-            middle_name,
-            suffix,
-            farmer_details,
             verification: {
                 front_id: frontBase64,
                 back_id: backBase64,
@@ -136,7 +129,10 @@ module.exports.verifyUser = async (req, res) => {
                 is_verified: true,
                 "verification.status": "Approved"
             },
-            { new: true }
+            {   new: true,
+                projection: { password: 0 }
+            },
+
         );
 
         if (!user) {

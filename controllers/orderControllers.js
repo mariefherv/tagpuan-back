@@ -2,9 +2,13 @@ const Order = require("../models/Order");
 
 module.exports.createOrder = async (req, res) => {
     try {
-        const order = new Order(req.body);
-        await order.save();
-        res.status(201).json(order);
+        const newOrder = new Order({
+            ...req.body,
+            contractor_id: req.user.id,
+            schedule: new Date(req.body.schedule)
+        });
+        await newOrder.save();
+        res.status(201).json(newOrder);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -12,8 +16,13 @@ module.exports.createOrder = async (req, res) => {
 
 module.exports.viewOrder = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
+        const order = await Order.findById(req.params.id)
+            .populate("contractor_id", "first_name last_name")
+            .populate("commodity", "en_name hil_name")
+            .lean(); // Convert to plain object for performance
+
         if (!order) return res.status(404).json({ error: "Order not found" });
+
         res.json(order);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -24,6 +33,7 @@ module.exports.requestOrder = async (req, res) => {
     try {
         const newOrder = new Order({
             ...req.body,
+            contractor_id: req.user.id,
             winning_bid: {
                 farmer_id: req.params.farmer_id, // Set farmer_id from URL parameter
                 date_applied: new Date() // Capture request time

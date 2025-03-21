@@ -10,7 +10,8 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
     commodity: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Commodity",
         required: true
     },
     order_type: {
@@ -20,12 +21,14 @@ const orderSchema = new mongoose.Schema({
     },
     quantity: {
         type: Number,
-        required: true
+        required: true,
+        default: 1
     },
     duration: {
         type: String,
-        enum: ["Single", "Weekly", "Monthly"],
-        required: true
+        enum: ["Single Order", "Weekly", "Monthly"],
+        required: true,
+        default: "Single Order"
     },
     price: {
         type: Number,
@@ -42,12 +45,13 @@ const orderSchema = new mongoose.Schema({
     },
     logistics: {
         type: String,
-        enum: ["Pick-up", "Delivery"],
+        enum: ["Pickup", "Delivery"],
         required: true
     },
     schedule: {
         type: Date,
-        required: true
+        required: true,
+        set: v => new Date(v)
     },
     // Winning bid is optional
     winning_bid: {

@@ -3,7 +3,7 @@ const router = express.Router();
 const bidController = require("../controllers/bidControllers");
 
 // Create a new bid
-router.post("/", bidController.createBid);
+router.post("/create", bidController.createBid);
 
 // View all bids for a specific order
 router.get("/order/:orderId", bidController.viewAllBids);
