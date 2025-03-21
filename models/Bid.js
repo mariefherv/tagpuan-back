@@ -13,12 +13,7 @@ const bidSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Contract",
         required: true
-    },
-    date_applied: {
-        type: Date,
-        default: Date.now
-    },
-    date_response: Date
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Bid", bidSchema);

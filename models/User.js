@@ -1,6 +1,3 @@
-/*
-    Model for users
-*/
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
@@ -24,7 +21,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["contractor", "farmer", "vendor", "admin"],
+        enum: ["Contractor", "Farmer", "Vendor"],
         required: true
     },
     first_name: {
@@ -38,17 +35,40 @@ const userSchema = new mongoose.Schema({
     middle_name: String,
     suffix: String,
     farmer_details: {
-        commodity: String,
-        land_area: Number
+        commodity: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Commodity"
+        }],
+        paymentTerms: {
+            type: [String],
+            enum: ["Cash on Delivery", "E-Wallet (GCash/Maya)", "Digital Bank Transfer"],
+            default: []
+        },
+        modeOfDelivery: {
+            type: [String],
+            enum: ["Pickup", "Delivery"],
+            default: []
+        }
     },
     verification: {
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected"],
-            default: "pending"
+            enum: ["Pending", "Approved", "Rejected"],
+            default: "Pending"
         },
-        date_applied: Date,
-        date_response: Date
+        date_applied: {
+            type: Date,
+            default: Date.now
+        },
+        date_response: Date,
+        front_id: {
+            type: String, // Base64 string
+            default: ""
+        },
+        back_id: {
+            type: String, // Base64 string
+            default: ""
+        }
     }
 }, { timestamps: true });
 
