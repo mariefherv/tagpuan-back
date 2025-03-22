@@ -68,8 +68,8 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Preparing", "On The Way", "Delivered"],
-        default: "Preparing"
+        enum: ["Pending", "Accepted", "Rejected", "Preparing", "On The Way", "Delivered"],
+        default: "Pending"
     },
     confirmed: {
         type: Boolean,
@@ -79,7 +79,7 @@ const orderSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-    
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("Order", orderSchema);
