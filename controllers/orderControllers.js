@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const User = require("../models/User");
 
 module.exports.createOrder = async (req, res) => {
     try {
@@ -54,26 +55,66 @@ module.exports.requestOrder = async (req, res) => {
 
 module.exports.viewAllOrders = async (req, res) => {
     try {
-        const { commodity, contractType, schedule } = req.query;
+        const { commodity, order_type, schedule } = req.query; // Use correct field names
 
-        // Convert commodities to an array if it's not already
         const filterConditions = {};
         
-        if (commodities) {
-            filterConditions.commodity = commodity;
+        if (commodity) {
+            filterConditions.commodity = commodity;  // Ensure it's correctly mapped
         }
 
-        if (contractType) {
-            filterConditions.contractType = contractType;
+        if (order_type) {
+            filterConditions.order_type = order_type; // Ensure field matches schema
         }
 
         if (schedule) {
-            filterConditions.schedule = new Date(schedule); // Convert to Date
+            filterConditions.schedule = new Date(schedule); // Convert schedule to Date
         }
 
-        const orders = await Order.find(filterConditions);
+        // Ensure `commodity` is populated correctly
+        const orders = await Order.find(filterConditions)
+            .populate("commodity", "en_name hil_name") // Fetch `en_name` and `hil_name`
+            .lean();
+
         res.json(orders);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
+module.exports.viewUserOrders = async (req, res) => {
+    try {
+        const userId = req.user.id; // Get authenticated user ID
+
+        // Find user to check their role
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        let filter = {};
+
+        // If farmer, get orders where they are the winning bidder
+        if (user.role === "Farmer") {
+            filter = { "winning_bid.farmer_id": userId };
+        }
+        // If contractor, get orders they created
+        else if (user.role === "Contractor") {
+            filter = { contractor_id: userId };
+        } else {
+            return res.status(403).json({ error: "Access denied. Invalid role." });
+        }
+
+        // Retrieve orders based on role
+        const orders = await Order.find(filter)
+            .populate("commodity", "en_name hil_name")
+            .lean();
+
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+

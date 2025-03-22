@@ -9,9 +9,9 @@ const bidSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    contract_id: {
+    order_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Contract",
+        ref: "Order",
         required: true
     }
 }, { timestamps: true });

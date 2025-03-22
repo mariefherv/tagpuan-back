@@ -173,4 +173,35 @@ module.exports.denyVerification = async (req, res) => {
 };
 
 
+module.exports.editUser = async (req, res) => {
+    try {
+        // Fetch the existing user
+        const existingUser = await User.findById(req.user.id);
+        if (!existingUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        let profile_pic = existingUser.profile_pic; // Preserve the current profile picture
+
+        // Check if a new profile picture is uploaded
+        if (req.files && req.files.profile_pic) {
+            profile_pic = bufferToBase64(req.files.profile_pic[0].buffer);
+        }
+
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { ...req.body, profile_picture: profile_pic },
+            { new: true }
+        );
+
+        res.json({
+            message: "User profile updated successfully",
+            user: updatedUser,
+        });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 

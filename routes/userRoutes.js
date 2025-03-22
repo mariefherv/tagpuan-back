@@ -10,6 +10,7 @@ router.post("/login", userController.loginUser);
 
 // Protected routes (requires authentication)
 router.get("/profile", auth.verify, userController.getUserDetails);
+router.put("/edit", auth.verify, upload.fields([{ name: "profile_pic", maxCount: 1 }]), userController.editUser);
 router.get("/all", auth.verify, auth.verifyAdmin, userController.getAllUsers);
 router.put("/change-password", auth.verify, userController.changePassword);
 router.put("/role/:userId", auth.verify, auth.verifyAdmin, userController.changeUserRole);

@@ -69,6 +69,15 @@ const userSchema = new mongoose.Schema({
             type: String, // Base64 string
             default: ""
         }
+    },
+    agricoin: {
+        type: Number,
+        default: 0,
+        required: true
+    },
+    profile_picture: {
+        type: String, // Base64 string
+        default: ""
     }
 }, { timestamps: true });
 

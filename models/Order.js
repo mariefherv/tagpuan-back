@@ -65,7 +65,21 @@ const orderSchema = new mongoose.Schema({
         },
         price: Number,
         date: Date,
+    },
+    status: {
+        type: String,
+        enum: ["Preparing", "On The Way", "Delivered"],
+        default: "Preparing"
+    },
+    confirmed: {
+        type: Boolean,
+        default: false
+    },
+    completed: {
+        type: Boolean,
+        default: false
     }
+    
 }, { timestamps: true });
 
 module.exports = mongoose.model("Order", orderSchema);
