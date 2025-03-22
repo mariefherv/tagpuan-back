@@ -19,6 +19,14 @@ router.post("/request/:farmer_id", verify, orderController.requestOrder);
 // View orders by user
 router.get("/view", verify, orderController.viewUserOrders);
 
+// Update order status
+router.put("/update/:orderId", verify, orderController.updateOrderStatus);
+
+// Cancel order status
+router.put("/cancel/:orderId", verify, orderController.cancelOrder);
+
+router.put("/confirm/:orderId", verify, orderController.confirmOrder);
+
 // View a specific order by ID
 router.get("/:id", verify, orderController.viewOrder);
 
