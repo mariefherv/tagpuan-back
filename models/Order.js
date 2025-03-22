@@ -22,7 +22,8 @@ const orderSchema = new mongoose.Schema({
     quantity: {
         type: Number,
         required: true,
-        default: 1
+        default: 1,
+        min: [1, "Quantity must be at least 1"]
     },
     duration: {
         type: String,
@@ -32,7 +33,8 @@ const orderSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: true
+        required: true,
+        min: [0, "Price must be a positive number"]
     },
     payment_terms: {
         type: String,
@@ -41,7 +43,10 @@ const orderSchema = new mongoose.Schema({
     },
     place_of_delivery: {
         type: String,
-        required: true
+        required: true,
+        trim: true,
+        minlength: [3, "Delivery address must be at least 3 characters"],
+        maxlength: [100, "Delivery address is too long"]
     },
     logistics: {
         type: String,
@@ -51,7 +56,12 @@ const orderSchema = new mongoose.Schema({
     schedule: {
         type: Date,
         required: true,
-        set: v => new Date(v)
+        validate: {
+            validator: function (v) {
+                return v > new Date(); // Ensures schedule is in the future
+            },
+            message: "Schedule must be a future date"
+        }
     },
     // Winning bid is optional
     winning_bid: {
@@ -63,13 +73,16 @@ const orderSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
         },
-        price: Number,
         date: Date,
     },
     status: {
         type: String,
-        enum: ["Pending", "Accepted", "Rejected", "Preparing", "On The Way", "Delivered"],
+        enum: ["Pending", "Accepted", "Preparing", "On The Way", "Delivered"],
         default: "Pending"
+    },
+    canceled: {
+        type: Boolean,
+        default: false
     },
     confirmed: {
         type: Boolean,
@@ -81,5 +94,16 @@ const orderSchema = new mongoose.Schema({
     }
 
 }, { timestamps: true });
+
+orderSchema.pre("save", function (next) {
+    if (this.canceled && this.status !== "Pending") {
+        return next(new Error("Canceled orders cannot have an active status."));
+    }
+    next();
+});
+
+orderSchema.index({ contractor_id: 1 });
+orderSchema.index({ commodity: 1 });
+orderSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Order", orderSchema);
