@@ -37,30 +37,43 @@ module.exports.getConversation = async (req, res) => {
         if (req.params.conversationId) {
             // Retrieve by conversation ID
             conversation = await Conversation.findById(req.params.conversationId)
-                .populate("participants", "first_name last_name")
+                .populate({
+                    path: "participants",
+                    select: "first_name last_name",
+                })
                 .populate({
                     path: "messages.sender_id",
-                    select: "first_name last_name"
+                    select: "first_name last_name",
                 });
         } else if (req.query.userId) {
             // Retrieve by two participants (current user + another user)
             conversation = await Conversation.findOne({
                 participants: { $all: [req.user.id, req.query.userId] }
             })
-                .populate("participants", "first_name last_name")
+                .populate({
+                    path: "participants",
+                    select: "first_name last_name",
+                })
                 .populate({
                     path: "messages.sender_id",
-                    select: "first_name last_name"
+                    select: "first_name last_name",
                 });
         }
 
         if (!conversation) return res.status(404).json({ error: "Conversation not found" });
+
+        // Filter out the requesting user from participants
+        conversation = conversation.toObject(); // Convert to plain object
+        conversation.participants = conversation.participants.filter(
+            participant => participant._id.toString() !== req.user.id
+        );
 
         res.json(conversation);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // Send a message in an existing conversation
 module.exports.sendMessage = async (req, res) => {
@@ -91,15 +104,28 @@ module.exports.sendMessage = async (req, res) => {
 // View all conversations of a user
 module.exports.getUserConversations = async (req, res) => {
     try {
-        const conversations = await Conversation.find({ participants: req.user.id })
-            .populate("participants", "first_name last_name")
+        let conversations = await Conversation.find({ participants: req.user.id })
+            .populate({
+                path: "participants",
+                select: "first_name last_name",
+            })
             .populate({
                 path: "messages.sender_id",
-                select: "first_name last_name"
+                select: "first_name last_name",
             });
+
+        // Filter out the requesting user from each conversation's participants
+        conversations = conversations.map(conversation => {
+            const convoObj = conversation.toObject();
+            convoObj.participants = convoObj.participants.filter(
+                participant => participant._id.toString() !== req.user.id
+            );
+            return convoObj;
+        });
 
         res.json(conversations);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
