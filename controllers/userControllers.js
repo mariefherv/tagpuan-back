@@ -9,10 +9,10 @@ const bufferToBase64 = (buffer) => {
 
 module.exports.registerUser = async (req, res) => {
     try {
-        const { password } = req.body;
+        const { password, farmer_details } = req.body;
         const hashedPw = bcrypt.hashSync(password, 10);
 
-        // Check if files are uploaded
+        // Ensure files are uploaded
         if (!req.files || !req.files.front_id || !req.files.back_id) {
             return res.status(400).json({ message: "Front and back ID images are required" });
         }
@@ -21,10 +21,29 @@ module.exports.registerUser = async (req, res) => {
         const frontBase64 = bufferToBase64(req.files.front_id[0].buffer);
         const backBase64 = bufferToBase64(req.files.back_id[0].buffer);
 
+        // Parse farmer_details correctly
+        let parsedFarmerDetails = {};
+        if (farmer_details) {
+            let details = typeof farmer_details === "string" ? JSON.parse(farmer_details) : farmer_details;
+
+            parsedFarmerDetails = {
+                commodity: Array.isArray(details.commodity)
+                    ? details.commodity.map(id => mongoose.Types.ObjectId.createFromHexString(id.trim())) // Ensure ObjectId format
+                    : [],
+                modeOfDelivery: Array.isArray(details.modeOfDelivery)
+                    ? details.modeOfDelivery.map(mode => mode.trim()) // Trim whitespace
+                    : [],
+                paymentTerms: Array.isArray(details.paymentTerms)
+                    ? details.paymentTerms.map(term => term.trim()) // Trim whitespace
+                    : []
+            };
+        }
+
         // Create new user
         const user = new User({
             ...req.body,
             password: hashedPw,
+            farmer_details: parsedFarmerDetails, // Ensure correct format
             verification: {
                 front_id: frontBase64,
                 back_id: backBase64,
