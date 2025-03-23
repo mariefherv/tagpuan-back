@@ -25,6 +25,7 @@ router.put("/update/:orderId", verify, orderController.updateOrderStatus);
 // Cancel order status
 router.put("/cancel/:orderId", verify, orderController.cancelOrder);
 
+// Confirm order delivery
 router.put("/confirm/:orderId", verify, orderController.confirmOrder);
 
 // View a specific order by ID

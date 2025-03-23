@@ -46,5 +46,9 @@ app.use('/farmer',farmerRoutes);
 const commodityRoutes = require('./routes/commodityRoutes');
 app.use('/commodity',commodityRoutes);
 
+//for itemRoutes
+const itemRoutes = require('./routes/itemRoutes');
+app.use('/item',itemRoutes);
+
 
 app.listen(port,()=>console.log("API running at localhost:4000"))
