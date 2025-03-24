@@ -76,7 +76,24 @@ module.exports.buyItem = async (req, res) => {
         const item = await Item.findById(itemId);
         if (!item) return res.status(404).json({ error: "Item not found" });
 
+        const seller = await User.findById(item.seller_id);
+        if (!seller) return res.status(404).json({ error: "Seller not found" });
+
         const amount = payment_method === "agricoin" ? quantity * item.agricoin : quantity * item.price;
+
+        if (payment_method === "agricoin") {
+            if (buyer.agricoin < amount) {
+                return res.status(400).json({ error: "Insufficient agricoin balance" });
+            }
+
+            // Deduct agricoin from buyer
+            buyer.agricoin -= amount;
+            await buyer.save();
+
+            // Add agricoin to seller
+            seller.agricoin += amount;
+            await seller.save();
+        }
 
         const order = await ItemOrder.create({
             buyer_id,
@@ -92,6 +109,7 @@ module.exports.buyItem = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // View All Orders of the User
 module.exports.getUserOrders = async (req, res) => {
