@@ -4,7 +4,7 @@ const bidController = require("../controllers/bidControllers");
 const auth = require("../auth");
 
 // Create a new bid
-router.put("/create/:orderId", auth.verify, bidController.createBid);
+router.post("/create/:orderId", auth.verify, bidController.createBid);
 
 // View all bids for a specific order
 router.get("/order/:orderId", auth.verify, bidController.viewAllBids);
