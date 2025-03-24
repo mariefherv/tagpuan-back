@@ -1,6 +1,7 @@
 const Item = require("../models/Item");
 const ItemOrder = require("../models/ItemOrder");
 const User = require("../models/User");
+const Notification = require("../models/Notification")
 
 module.exports.createItem = async (req, res) => {
     try {
@@ -97,11 +98,20 @@ module.exports.buyItem = async (req, res) => {
 
         const order = await ItemOrder.create({
             buyer_id,
-            itemId,
+            item_id: itemId,
             amount,
             payment_method,
             place_of_delivery,
             logistics,
+        });
+
+        // Create Notification for Seller
+        await Notification.create({
+            recipient: seller._id,
+            sender: buyer_id,
+            type: "item_bought",
+            referenceId: order._id,
+            content: `Your item "${item.name}" has been purchased by ${buyer.first_name} ${buyer.last_name}.`
         });
 
         res.status(201).json(order);

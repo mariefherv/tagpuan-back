@@ -56,5 +56,9 @@ const itemOrderSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+itemOrderSchema.index({ buyer_id: 1 });
+itemOrderSchema.index({ item_id: 1 });
+itemOrderSchema.index({ status: 1 });
+itemOrderSchema.index({ place_of_delivery: 1 });
 
 module.exports = mongoose.model("ItemOrder", itemOrderSchema);

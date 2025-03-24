@@ -105,5 +105,7 @@ orderSchema.pre("save", function (next) {
 orderSchema.index({ contractor_id: 1 });
 orderSchema.index({ commodity: 1 });
 orderSchema.index({ status: 1 });
+orderSchema.index({ schedule: 1 });
+orderSchema.index({ "winning_bid.farmer_id": 1 });
 
 module.exports = mongoose.model("Order", orderSchema);

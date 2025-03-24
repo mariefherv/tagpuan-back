@@ -1,5 +1,6 @@
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 
 module.exports.createConversation = async (req, res) => {
     try {
@@ -24,6 +25,23 @@ module.exports.createConversation = async (req, res) => {
         });
 
         await conversation.save();
+        
+        const sender = await User.findById(req.user.id);
+
+        if(sender) {
+            const full_name = sender.first_name + sender.last_name;
+
+            // Create Notification
+            await Notification.create({
+                recipient: recipient._id,
+                sender: sender._id,
+                type: "new_convo",
+                referenceId: conversation._id,
+                content: `${full_name} wants to send you a message.`
+            });
+        }
+        
+                
         res.status(201).json(await conversation.populate("participants", "first_name last_name"));
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -74,6 +92,42 @@ module.exports.getConversation = async (req, res) => {
     }
 };
 
+// Mark messages as read in a conversation
+module.exports.markMessagesAsRead = async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.params.conversationId);
+        
+        if (!conversation) return res.status(404).json({ error: "Conversation not found" });
+
+        let isUpdated = false;
+
+        conversation.messages.forEach(message => {
+            if (message.sender_id.toString() !== req.user.id && !message.isRead) {
+                message.isRead = true;
+                isUpdated = true;
+            }
+        });
+
+        if (isUpdated) {
+            const hasUnreadMessages = conversation.messages.some(msg => !msg.isRead);
+            conversation.hasUnread = hasUnreadMessages;
+
+            await conversation.save();
+
+            // Remove unread message notifications for this conversation
+            await Notification.deleteMany({
+                recipient: req.user.id,
+                type: "message",
+                referenceId: conversation._id
+            });
+        }
+
+        res.json({ message: "Messages marked as read" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 // Send a message in an existing conversation
 module.exports.sendMessage = async (req, res) => {
@@ -90,7 +144,21 @@ module.exports.sendMessage = async (req, res) => {
         };
 
         conversation.messages.push(message);
+        conversation.hasUnread = true;
         await conversation.save();
+
+        // Notify the recipient
+        const recipientId = conversation.participants.find(p => p._id.toString() !== req.user.id);
+        
+        if (recipientId) {
+            await Notification.create({
+                recipient: recipientId,
+                sender: req.user.id,
+                type: "message",
+                referenceId: conversation._id,
+                content: "You have a new message."
+            });
+        }
 
         res.status(201).json({
             message,

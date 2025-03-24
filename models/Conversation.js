@@ -14,15 +14,30 @@ const conversationSchema = new mongoose.Schema({
         {
             sender_id: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "User"
+                ref: "User",
+                required: true
             },
-            content: String,
+            content: {
+                type: String,
+                required: true
+            },
             timestamp: {
                 type: Date,
                 default: Date.now
+            },
+            isRead: {
+                type: Boolean,
+                default: false
             }
         }
-    ]
+    ],
+    hasUnread: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
+
+conversationSchema.index({ participants: 1 });
+conversationSchema.index({ "messages.timestamp": -1 });
 
 module.exports = mongoose.model("Conversation", conversationSchema);
