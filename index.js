@@ -50,5 +50,9 @@ app.use('/commodity',commodityRoutes);
 const itemRoutes = require('./routes/itemRoutes');
 app.use('/item',itemRoutes);
 
+//for notificationRoutes
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/notification',notificationRoutes);
+
 
 app.listen(port,()=>console.log("API running at localhost:4000"))

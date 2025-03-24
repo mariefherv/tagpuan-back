@@ -14,4 +14,7 @@ const commoditySchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+commoditySchema.index({ en_name: 1 }, { unique: true });
+commoditySchema.index({ category: 1 });
+
 module.exports = mongoose.model("Commodity", commoditySchema);

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const auth = require("../auth");
+const mongoose = require("mongoose")
 
 // Convert buffer to base64
 const bufferToBase64 = (buffer) => {
@@ -10,7 +11,7 @@ const bufferToBase64 = (buffer) => {
 module.exports.registerUser = async (req, res) => {
     try {
         const { password, farmer_details } = req.body;
-        const hashedPw = bcrypt.hashSync(password, 10);
+        const hashedPw = await bcrypt.hash(password, 10);
 
         // Ensure files are uploaded
         if (!req.files || !req.files.front_id || !req.files.back_id) {
@@ -21,29 +22,39 @@ module.exports.registerUser = async (req, res) => {
         const frontBase64 = bufferToBase64(req.files.front_id[0].buffer);
         const backBase64 = bufferToBase64(req.files.back_id[0].buffer);
 
-        // Parse farmer_details correctly
+        // Validate role (only allow Farmer, Contractor, or Vendor)
+        const allowedRoles = ["Farmer", "Contractor", "Vendor"];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: "Invalid role. Allowed roles: Farmer, Contractor, Vendor" });
+        }
+        
+        // Parse farmer_details safely
         let parsedFarmerDetails = {};
         if (farmer_details) {
-            let details = typeof farmer_details === "string" ? JSON.parse(farmer_details) : farmer_details;
+            try {
+                let details = typeof farmer_details === "string" ? JSON.parse(farmer_details) : farmer_details;
 
-            parsedFarmerDetails = {
-                commodity: Array.isArray(details.commodity)
-                    ? details.commodity.map(id => mongoose.Types.ObjectId.createFromHexString(id.trim())) // Ensure ObjectId format
-                    : [],
-                modeOfDelivery: Array.isArray(details.modeOfDelivery)
-                    ? details.modeOfDelivery.map(mode => mode.trim()) // Trim whitespace
-                    : [],
-                paymentTerms: Array.isArray(details.paymentTerms)
-                    ? details.paymentTerms.map(term => term.trim()) // Trim whitespace
-                    : []
-            };
+                parsedFarmerDetails = {
+                    commodity: Array.isArray(details.commodity)
+                        ? details.commodity.map(id => mongoose.Types.ObjectId.createFromHexString(id.trim()))
+                        : [],
+                    modeOfDelivery: Array.isArray(details.modeOfDelivery)
+                        ? details.modeOfDelivery.map(mode => mode.trim())
+                        : [],
+                    paymentTerms: Array.isArray(details.paymentTerms)
+                        ? details.paymentTerms.map(term => term.trim())
+                        : []
+                };
+            } catch (parseError) {
+                return res.status(400).json({ error: "Invalid farmer_details format. Ensure it is valid JSON." });
+            }
         }
 
         // Create new user
         const user = new User({
             ...req.body,
             password: hashedPw,
-            farmer_details: parsedFarmerDetails, // Ensure correct format
+            farmer_details: parsedFarmerDetails,
             verification: {
                 front_id: frontBase64,
                 back_id: backBase64,
@@ -55,7 +66,7 @@ module.exports.registerUser = async (req, res) => {
         res.status(201).json({ message: "Registration successful!" });
 
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: "Server error: " + error.message });
     }
 };
 
@@ -107,7 +118,7 @@ module.exports.changePassword = async (req, res) => {
         // Compare old password
         const isMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isMatch) {
-            return res.status(401).json({ error: "Incorrect old password." });
+            return res.status(403).json({ error: "Incorrect old password." });
         }
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedNewPassword;
@@ -121,6 +132,10 @@ module.exports.changePassword = async (req, res) => {
 
 module.exports.changeUserRole = async (req, res) => {
     try {
+        if (req.user.role !== "Admin") {
+            return res.status(403).json({ error: "Only an Admin can change user roles." });
+        }
+
         const user = await User.findByIdAndUpdate(
             req.params.userId,
             { role: req.body.role },
@@ -131,14 +146,12 @@ module.exports.changeUserRole = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        res.json({
-            message: "User role updated successfully",
-            user,
-        });
+        res.json({ message: "User role updated successfully", user });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
+
 
 module.exports.verifyUser = async (req, res) => {
     try {
@@ -194,33 +207,37 @@ module.exports.denyVerification = async (req, res) => {
 
 module.exports.editUser = async (req, res) => {
     try {
-        // Fetch the existing user
         const existingUser = await User.findById(req.user.id);
         if (!existingUser) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        let profile_pic = existingUser.profile_pic; // Preserve the current profile picture
-
-        // Check if a new profile picture is uploaded
+        let profile_pic = existingUser.profile_picture;
         if (req.files && req.files.profile_pic) {
             profile_pic = bufferToBase64(req.files.profile_pic[0].buffer);
         }
 
-        // Update user
+        // Prevent role modification unless by an Admin
+        if (req.body.role && req.user.role !== "Admin") {
+            return res.status(403).json({ error: "Only an Admin can change user roles." });
+        }
+
+        // Prevent agricoin modification unless by an Admin
+        if (req.body.agricoin && req.user.role !== "Admin") {
+            return res.status(403).json({ error: "Only an Admin can modify agricoin balance." });
+        }
+
         const updatedUser = await User.findByIdAndUpdate(
             req.user.id,
             { ...req.body, profile_picture: profile_pic },
             { new: true }
         );
 
-        res.json({
-            message: "User profile updated successfully",
-            user: updatedUser,
-        });
+        res.json({ message: "User profile updated successfully", user: updatedUser });
 
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
+
 

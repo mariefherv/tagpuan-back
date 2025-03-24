@@ -16,4 +16,9 @@ const bidSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+
+bidSchema.index({ farmer_id: 1 });
+bidSchema.index({ order_id: 1 });
+bidSchema.index({ farmer_id: 1, order_id: 1 }, { unique: true }); // Ensures a farmer can bid only once per order
+
 module.exports = mongoose.model("Bid", bidSchema);

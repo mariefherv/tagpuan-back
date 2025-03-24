@@ -1,5 +1,7 @@
 const Order = require("../models/Order");
 const User = require("../models/User");
+const Notification = require("../models/Notification")
+
 
 module.exports.createOrder = async (req, res) => {
 
@@ -47,6 +49,15 @@ module.exports.requestOrder = async (req, res) => {
         });
 
         await newOrder.save();
+
+        // Notify the farmer
+        await Notification.create({
+            recipient: req.params.farmer_id,
+            sender: req.user.id,
+            type: "new_order",
+            referenceId: newOrder._id,
+            content: "A new order has been placed for your product."
+        });
 
         res.status(201).json({
             message: "Order sent!",
@@ -155,6 +166,15 @@ module.exports.updateOrderStatus = async (req, res) => {
         if (!updatedOrder) {
             return res.status(500).json({ error: "Failed to update order status" });
         }
+
+        // Notify the buyer
+        await Notification.create({
+            recipient: order.buyer_id._id,
+            sender: order.contractor_id,
+            type: "order_status",
+            referenceId: order._id,
+            content: `Your order status has changed to ${status}.`
+        });
 
         res.json({ message: "Order status updated successfully", order: updatedOrder });
     } catch (error) {

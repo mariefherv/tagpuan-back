@@ -33,4 +33,8 @@ const itemSchema = new mongoose.Schema({
     }
 })
 
+itemSchema.index({ seller_id: 1 });
+itemSchema.index({ marketplace: 1 });
+itemSchema.index({ price: 1 });
+
 module.exports = mongoose.model("Item", itemSchema);
