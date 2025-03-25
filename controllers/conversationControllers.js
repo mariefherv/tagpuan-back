@@ -12,7 +12,7 @@ module.exports.createConversation = async (req, res) => {
         // Check if a conversation already exists
         const existingConversation = await Conversation.findOne({
             participants: { $all: [req.user.id, recipient._id] }
-        }).populate("participants", "first_name last_name");
+        }).populate("participants", "first_name last_name profile_picture");
 
         if (existingConversation) {
             return res.status(200).json(existingConversation);
@@ -42,7 +42,7 @@ module.exports.createConversation = async (req, res) => {
         }
         
                 
-        res.status(201).json(await conversation.populate("participants", "first_name last_name"));
+        res.status(201).json(await conversation.populate("participants", "first_name last_name profile_picture"));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -57,11 +57,11 @@ module.exports.getConversation = async (req, res) => {
             conversation = await Conversation.findById(req.params.conversationId)
                 .populate({
                     path: "participants",
-                    select: "first_name last_name",
+                    select: "first_name last_name profile_picture",
                 })
                 .populate({
                     path: "messages.sender_id",
-                    select: "first_name last_name",
+                    select: "first_name last_name profile_picture",
                 });
         } else if (req.query.userId) {
             // Retrieve by two participants (current user + another user)
@@ -70,11 +70,11 @@ module.exports.getConversation = async (req, res) => {
             })
                 .populate({
                     path: "participants",
-                    select: "first_name last_name",
+                    select: "first_name last_name profile_picture",
                 })
                 .populate({
                     path: "messages.sender_id",
-                    select: "first_name last_name",
+                    select: "first_name last_name profile_picture",
                 });
         }
 
@@ -133,7 +133,7 @@ module.exports.markMessagesAsRead = async (req, res) => {
 module.exports.sendMessage = async (req, res) => {
     try {
         const conversation = await Conversation.findById(req.params.conversationId)
-            .populate("participants", "first_name last_name");
+            .populate("participants", "first_name last_name profile_picture");
 
         if (!conversation) return res.status(404).json({ error: "Conversation not found" });
 
@@ -175,11 +175,11 @@ module.exports.getUserConversations = async (req, res) => {
         let conversations = await Conversation.find({ participants: req.user.id })
             .populate({
                 path: "participants",
-                select: "first_name last_name",
+                select: "first_name last_name profile_picture",
             })
             .populate({
                 path: "messages.sender_id",
-                select: "first_name last_name",
+                select: "first_name last_name profile_picture",
             });
 
         // Filter out the requesting user from each conversation's participants
