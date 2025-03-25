@@ -77,7 +77,32 @@ module.exports.loginUser = async (req, res) => {
         if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
             return res.status(401).json({ message: "Invalid username or password" });
         }
+        // Update user online status and last login timestamp
+        user.isOnline = true;
+        user.last_login = new Date();
+        await user.save();
+
         res.json({ accessToken: auth.createAccessToken(user) });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports.logoutUser = async (req, res) => {
+    try {
+        const userId = req.user.id; // Assuming you have user authentication middleware
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update user status
+        user.isOnline = false;
+        user.last_logout = new Date();
+        await user.save();
+
+        res.json({ message: "User logged out successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

@@ -17,5 +17,6 @@ router.put("/change-password", auth.verify, userController.changePassword);
 router.put("/role/:userId", auth.verify, auth.verifyAdmin, userController.changeUserRole);
 router.put("/verify/:userId", auth.verify, auth.verifyAdmin, userController.verifyUser);
 router.put("/deny/:userId", auth.verify, auth.verifyAdmin, userController.denyVerification);
+router.put("/logout", auth.verify, userController.logoutUser);
 
 module.exports = router;

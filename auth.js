@@ -8,8 +8,12 @@ module.exports.createAccessToken = (userDetails) => {
 		email: userDetails.email,
 		role: userDetails.role,
 	}
-	//jwt.sign() will create a JWT using our data object, with our secret.
-	return jwt.sign(data,secret,{});
+
+    return jwt.sign(
+        data,
+        secret,
+        { expiresIn: "1h" } // Token expires in 1 hour
+    );
 }
 
 // Verify if authenticated user

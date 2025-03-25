@@ -78,7 +78,10 @@ const userSchema = new mongoose.Schema({
     profile_picture: {
         type: String, // Base64 string
         default: ""
-    }
+    },
+    isOnline: { type: Boolean, default: false },
+    last_login: { type: Date },
+    last_logout: { type: Date }
 }, { timestamps: true });
 
 userSchema.index({ username: 1 }, { unique: true });
