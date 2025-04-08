@@ -10,7 +10,7 @@ const bufferToBase64 = (buffer) => {
 
 module.exports.registerUser = async (req, res) => {
     try {
-        const { password, farmer_details } = req.body;
+        const { password, farmer_details, role } = req.body;
         const hashedPw = await bcrypt.hash(password, 10);
 
         // Ensure files are uploaded
@@ -24,7 +24,7 @@ module.exports.registerUser = async (req, res) => {
 
         // Validate role (only allow Farmer, Contractor, or Vendor)
         const allowedRoles = ["Farmer", "Contractor", "Vendor"];
-        if (!allowedRoles.includes(req.body.role)) {
+        if (!allowedRoles.includes(role)) {
             return res.status(400).json({ error: "Invalid role. Allowed roles: Farmer, Contractor, Vendor" });
         }
         

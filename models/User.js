@@ -97,7 +97,7 @@ userSchema.pre("save", async function (next) {
     }
 
     // Ensure the current user role is available (to be set manually in the request handling)
-    const currentUserRole = this._currentUserRole; 
+    const currentUserRole = this.role; 
 
     if (!currentUserRole) {
         return next(new Error("Current user role must be provided"));
