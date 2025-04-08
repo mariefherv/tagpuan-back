@@ -24,7 +24,7 @@ module.exports.registerUser = async (req, res) => {
 
         // Validate role (only allow Farmer, Contractor, or Vendor)
         const allowedRoles = ["Farmer", "Contractor", "Vendor"];
-        if (!allowedRoles.includes(role)) {
+        if (!allowedRoles.includes(req.body.role)) {
             return res.status(400).json({ error: "Invalid role. Allowed roles: Farmer, Contractor, Vendor" });
         }
         
